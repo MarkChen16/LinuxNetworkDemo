@@ -8,6 +8,8 @@
 //使用root账户运行ln -s /xx/xx/../readfile.out /bin/xread   将程序变成一个小工具
 //使用例子：xread data.txt
 
+//main参数：1、当前程序路径，2、参数...
+
 int main(int argc, char* argv[])
 {
 	int ret = 0;
