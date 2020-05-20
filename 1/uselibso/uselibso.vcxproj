@@ -35,15 +35,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{a23f51a8-6024-460a-8e4d-a67ec71f962a}</ProjectGuid>
+    <ProjectGuid>{56780144-844e-4580-9931-6953371d680f}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>HelloWorld</RootNamespace>
+    <RootNamespace>uselibso</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
     <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
-    <ProjectName>2.1 HelloWorld</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
@@ -77,6 +76,12 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libstrlen.so" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="strlen.h" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
