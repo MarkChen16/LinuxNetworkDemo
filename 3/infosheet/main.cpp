@@ -20,7 +20,7 @@
 
 使用open close fstat lseek read write mmap munmap fcntl ioctl
 
-lseek函数：可以移动当前读写位置，还可以创建空洞文件
+lseek函数：可以移动当前读写位置，移动超出文件未尾的位置写入数据还可以创建空洞文件
 空洞文件的用途：
 1、进程通信内存映射
 2、提前分配连续的磁盘空间，减少读写时寻道开销
