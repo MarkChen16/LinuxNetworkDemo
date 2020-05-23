@@ -9,6 +9,59 @@
 #include <unistd.h>
 
 #include <sys/mman.h>
+#include <sys/ioctl.h>
+
+/*
+命令xinfo [-p] [-r] [-w]
+参数说明：
+-p：打印所有记录
+-r：读取指定的记录
+-w：写入新的记录
+
+使用open close fstat lseek read write mmap munmap fcntl ioctl
+
+lseek函数：可以移动当前读写位置，还可以创建空洞文件
+空洞文件的用途：
+1、进程通信内存映射
+2、提前分配连续的磁盘空间，减少读写时寻道开销
+3、下载文件提前分配好文件空间，多线程快速写入数据
+
+mmap和munmap函数：两个进程对同一个空洞文件创建内存映射，实现进程间通信
+
+fcntl函数：获取和设置已经打开文件的性质
+int fcntl(int fd, int cmd);
+int fcntl(int fd, int cmd, long arg);
+int fcntl(int fd, int cmd struct flock* lock);
+
+cmd参数类型：
+复制设备描述符
+F_DEPFD
+
+获取和设置设备描述符
+F_GETFD
+F_SETFD
+
+获取和设置文件的状态
+F_GETFL
+F_SETFL
+
+用于IO消息驱动，设置处理IO消息的进程ID或者进程组ID
+F_GETOWN
+F_SETOWN
+
+获取和设置记录锁
+F_GETLK
+F_SETLK
+
+获取和设置文件租约
+F_GETLEASE
+F_SETLEASE
+
+用户空间的ioctl函数：直接发送特殊命令给设备驱动
+int ioctl(int fd, int request, ...);
+
+
+*/
 
 #define NAME_MAX_LEN 30
 
@@ -32,20 +85,6 @@ struct StudInfo
 	int age;
 	int score;
 };
-
-/*
-命令xinfo [-p] [-r] [-w]
-参数说明：
--p：打印所有记录
--r：读取指定的记录
--w：写入新的记录
-
-使用open close fstat lseek read write mmap munmap fcntl
-
-*/
-
-int openFile();
-void closeFile();
 
 int main(int argc, char* argv[])
 {
@@ -76,9 +115,17 @@ int main(int argc, char* argv[])
 		{
 			int countInfo = st.st_size / sizeof(StudInfo);
 
-			//获取文件状态
+			//获取文件访问模式
 			int flags = fcntl(fd, F_GETFL, 0);
-			flags = flags & O_ACCMODE;	//获取组合中的访问模式
+			flags = flags & O_ACCMODE;	//获取标志组合中的访问模式
+
+			//获取接收消息的进程ID
+			int uid = fcntl(fd, F_GETOWN);
+			int rev1 = fcntl(fd, F_SETOWN, 1000);
+
+			//获取接收缓冲区的字节数
+			int nReadBuffCount = 10;
+			int rev2 = ioctl(fd, FIONREAD, &nReadBuffCount);
 
 			//判断参数
 			if (strcmp(params, "-p") == 0 && argc == 2)
@@ -86,6 +133,7 @@ int main(int argc, char* argv[])
 				//打印所有记录=========================
 				StudInfo* ptrInfo = NULL;
 
+				//映射到内存，使用指针操作，速度更快
 				ptrInfo = (StudInfo*)mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 				if (ptrInfo == (StudInfo*)-1)
 				{
@@ -99,6 +147,7 @@ int main(int argc, char* argv[])
 						ptrInfo[i].print();
 					}
 
+					//取消映射
 					munmap(ptrInfo, st.st_size);
 				}
 			}
