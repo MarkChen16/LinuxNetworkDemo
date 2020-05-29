@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	mkfifo(fifoPath, mode);
 
 	//打开命名管道
-	int fd = open(fifoPath, O_WRONLY);
+	int fd = open(fifoPath, O_WRONLY);  //没有使用O_NONBLOCK
 	if (fd == -1)
 	{
 		printf("NamedPipe Client: Failed to open fifo file.\n");
