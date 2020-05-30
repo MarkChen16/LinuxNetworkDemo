@@ -43,9 +43,9 @@ int main(int argc, char* argv[])
 {
 	int ret = 0;
 
-	//根据文件的inode值的唯一性和计划编号生成唯一的ipc和键值，文件路径必须存在，进程之间IPC过程中，文件不能删除或者重新创建；
 	system("touch /tmp/msg");
 	
+	//根据文件的inode值的唯一性和计划编号生成唯一的ipc和键值，文件路径必须存在，进程之间IPC过程中，文件不能删除或者重新创建；
 	key_t ipcKey = ftok("/tmp/msg", 'a');
 	if (ipcKey == -1)
 	{
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		//生成消息标识(ipc标识)
+		//生成消息队列(ipc标识)
 		//创建无模式：如果不存在则出错，如果存在则引用
 		//IPC_CREAT：如果不存在则创建，如果存在则引用
 		//IPC_CREAT | IPC_EXCL：如果不存在则创建，如果存在则报错EEXIST
