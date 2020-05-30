@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		//生成消息队列(ipc标识)
+		//创建消息队列(ipc标识)
 		//创建无模式：如果不存在则出错，如果存在则引用
 		//IPC_CREAT：如果不存在则创建，如果存在则引用
 		//IPC_CREAT | IPC_EXCL：如果不存在则创建，如果存在则报错EEXIST
