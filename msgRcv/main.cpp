@@ -47,25 +47,48 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		int msgID = msgget(ipcKey, IPC_CREAT | 0666);	//IPC_PRIVATE表示系统生成一个
-		if (msgID == -1)
+		int msqID = msgget(ipcKey, IPC_CREAT | 0666);	//IPC_PRIVATE表示系统生成一个
+		if (msqID == -1)
 		{
 			printf("Failed to msgget.\n");
 			ret = 2;
 		}
 		else
 		{
-			//接收消息，阻塞读取消息，一直等到有消息才返回
-			struct msgbuff_t msgHi;
-			int result = msgrcv(msgID, &msgHi, sizeof(struct msgbuff_t), MSGTYPE_SAYHI, 0);
-			if (result == -1)
+			
+			while (true)
 			{
-				printf("Failed to msgrcv.\n");
-				ret = 2;
-			}
-			else
-			{
-				printf("Message(%s): %s\n", msgHi.sendpid, msgHi.message);
+				int result = 0;
+
+				//查询消息队列状态
+				struct msqid_ds msg_stat;
+				result = msgctl(msqID, IPC_STAT, &msg_stat);
+				if (result == -1)
+				{
+					printf("Failed to msgrcv.\n");
+					ret = 3;
+
+					break;
+				}
+				else
+				{
+					printf("msg count: %d\n", msg_stat.msg_qnum);
+				}
+
+				//阻塞读取消息，一直等到有消息才返回
+				struct msgbuff_t msgHi;
+				result = msgrcv(msqID, &msgHi, sizeof(struct msgbuff_t), MSGTYPE_SAYHI, IPC_NOWAIT);
+				if (result == -1)
+				{
+					printf("Failed to msgrcv.\n");
+					ret = 2;
+
+					break;
+				}
+				else
+				{
+					printf("Message(%s): %s\n", msgHi.sendpid, msgHi.message);
+				}
 			}
 		}
 	}

@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
 		//创建无模式：如果不存在则出错，如果存在则引用
 		//IPC_CREAT：如果不存在则创建，如果存在则引用
 		//IPC_CREAT | IPC_EXCL：如果不存在则创建，如果存在则报错EEXIST
-		int msgID = msgget(ipcKey, IPC_CREAT | 0666);	//IPC_PRIVATE表示系统生成一个
-		if (msgID == -1)
+		int msqID = msgget(ipcKey, IPC_CREAT | 0666);	//IPC_PRIVATE表示系统生成一个
+		if (msqID == -1)
 		{
 			printf("Failed to msgget.\n");
 			ret = 2;
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
 			//IPC_NOWAIT：消息队列已满时，直接返回不写入队列
 			int len = sizeof(struct msgbuff_t) - sizeof(long);
-			int result = msgsnd(msgID, &msgHi, len, IPC_NOWAIT);
+			int result = msgsnd(msqID, &msgHi, len, IPC_NOWAIT);
 			if (result == -1)
 			{
 				printf("Failed to msgsnd.\n");
