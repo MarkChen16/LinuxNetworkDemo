@@ -33,7 +33,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "namedPipeClient", "4\namedP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msgSend", "4\msgSend\msgSend.vcxproj", "{619BC4DD-3464-45CA-960B-E709EBDAA274}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msgRcv", "msgRcv\msgRcv.vcxproj", "{B3573E39-8DE7-4FB5-8ECB-4566C6DC450E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msgRcv", "4\msgRcv\msgRcv.vcxproj", "{B3573E39-8DE7-4FB5-8ECB-4566C6DC450E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
