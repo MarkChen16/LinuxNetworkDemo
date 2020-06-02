@@ -109,15 +109,13 @@ int main(int argc, char* argv[])
 			setSem(semID, 2);
 			printf("after init, sem: %d\n", getSem(semID));
 
-			//两次减少
+			//获取资源
 			semSub(semID);
 			semSub(semID);
-			semSub(semID);
+			semSub(semID);  //没有资源了，会等待直到超时
 			printf("after sub, sem: %d\n", getSem(semID));
 
-			//三次增加
-			semAdd(semID);
-			semAdd(semID);
+			//释放资源
 			semAdd(semID);
 			semAdd(semID);
 			printf("after add, sem: %d\n", getSem(semID));
