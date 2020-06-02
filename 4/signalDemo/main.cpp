@@ -8,7 +8,7 @@
 /*
 信号：捕捉系统核心发给进程的信号，比如SIGALRM、SIGKILL、 SIGTERM等等，使用signal()函数注册信号的处理函数；
 
-相关函数：signal()、raise()
+相关函数：signal()、raise()、kill()
 
 */
 
@@ -55,8 +55,9 @@ int main(int argc, char* argv[])
 	//	}
 	//}
 
-	//触发kill信号
+	//向当前进程发送kill信号
 	//raise(SIGKILL);
+	//kill(getpid(), SIGKILL);
 
 	//触发定时器
 	printf("Exit at 5 seconds...\n");
