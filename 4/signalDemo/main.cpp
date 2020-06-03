@@ -40,9 +40,13 @@ int main(int argc, char* argv[])
 {
 	int ret = 0;
 
+	//捕捉指定信号
 	signal(SIGCHLD, signal_handler);
 	signal(SIGKILL, signal_handler);
 	signal(SIGALRM, signal_handler);
+
+	//忽略指定信号
+	signal(SIGINT, SIG_IGN);
 
 	//触发SIGCHLD信号
 	//for (int i = 0; i < 3; i++)
