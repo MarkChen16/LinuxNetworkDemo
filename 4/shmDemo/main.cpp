@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 					struct sembuf buf = { 0, -1, 0 };
 					semop(semID, &buf, 1);
 
-					break;
+					_exit(0);
 				}
 				else if (pidID > 0)
 				{

@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	//	if (pid == 0)
 	//	{
 
-	//		return 0;
+	//		_exit(0);
 	//	}
 	//}
 

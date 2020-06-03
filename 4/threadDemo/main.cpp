@@ -12,8 +12,9 @@
 pthread_t  pthread_mutex_t
 
 相关函数：
-pthread_create  pthread_exit  pthread_join
-pthread_mutex_init  pthread_mutex_destory  pthread_mutex_lock  pthread_mutex_unlock
+创建线程 pthread_create  pthread_exit  pthread_join
+互斥量同步 pthread_mutex_init  pthread_mutex_destory  pthread_mutex_lock  pthread_mutex_unlock
+信号量同步 
 */
 
 int main(int argc, char* argv[])

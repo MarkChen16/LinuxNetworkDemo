@@ -126,9 +126,10 @@ void* TicketWindow::run(void* arg)
 		srand(time(NULL) + This->getWindowID());
 		int buyCount = 1 + rand() % 3;
 		TDB.buyTicket(*This, buyCount);
-
+		
 		int sleepSec = buyCount;
 		sleep(sleepSec);
+		//usleep(3000);  N毫秒休眠
 	}
 
 	pthread_exit(NULL);
