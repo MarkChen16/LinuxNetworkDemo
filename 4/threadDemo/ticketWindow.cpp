@@ -111,23 +111,24 @@ void TicketWindow::setWindowID(int id)
 
 void* TicketWindow::run(void* arg)
 {
-	TicketWindow* THIS = (TicketWindow*)arg;
+	TicketWindow* This = (TicketWindow*)arg;
 
 	while (true)
 	{
 		//判断是否请求退出
 		{
-			MutexLocker locker(&THIS->m_mutex);
+			MutexLocker locker(&This->m_mutex);
 
-			if (THIS->m_askForExit)
+			if (This->m_askForExit)
 				break;
 		}
 
-		srand(time(NULL) + THIS->getWindowID());
+		srand(time(NULL) + This->getWindowID());
 		int buyCount = 1 + rand() % 3;
-		TDB.buyTicket(*THIS, buyCount);
+		TDB.buyTicket(*This, buyCount);
 
-		sleep(buyCount);
+		int sleepSec = buyCount;
+		sleep(sleepSec);
 	}
 
 	pthread_exit(NULL);

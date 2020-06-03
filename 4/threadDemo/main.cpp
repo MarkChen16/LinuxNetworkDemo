@@ -2,25 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include "ticketWindow.h"
-
 
 /*
 多线程：是程序执行路径的不同分支，进程启动只有一个主线程，多线程对资源访问需要同步。
 
 库依赖项：pthread
-相关函数：
-*/
+pthread_t  pthread_mutex_t
 
-static void signal_handler(int signo)
-{
-	if (SIGALRM == signo)
-	{
-		printf("系统开始关闭售票窗口！\n");
-	}
-}
+相关函数：
+pthread_create  pthread_exit  pthread_join
+pthread_mutex_init  pthread_mutex_destory  pthread_mutex_lock  pthread_mutex_unlock
+*/
 
 int main(int argc, char* argv[])
 {
@@ -40,18 +34,19 @@ int main(int argc, char* argv[])
 	sleep(10);
 	TDB.addTicket(50);
 
-	//20秒后停止售票
-	//signal(SIGALRM, signal_handler);
-
-	alarm(20);
-	pause();
-
-	//停止售票
+	//5秒后停止售票
+	sleep(5);
 	for (int i = 0; i < 10; i++)
 	{
 		window[i].askForExit();
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
 		window[i].stop();
 	}
+
+	printf("系统关闭售票窗口！\n");
 
 	return ret;
 }
