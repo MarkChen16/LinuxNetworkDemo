@@ -2,15 +2,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <signal.h>
+#include <sys/wait.h>
+
 /*
-fork()：复制父进程，不同的进程ID，写时复制
+fork()：创建子进程
 system()：新建子进程，调用shell外部命令，通过调用fork()、execve()和waitpid()实现
 exec()：新建进程代替原进程，使用原进程的资源，进程ID也一样。
+
+僵尸进程产生的原因：
+父进程fork了大量的子进程，一直在运行但没有执行wait/waitpid处理结束的子进程，导致pid标识耗尽，下一次fork失败；
+如果父进程先于子进程结束，init进程会接管所有的子进程，不会产生僵尸进程；
 
 除了init进程，所有进程都是有父进程的，所有进程都是复制或者克隆的
 使用pstree查看所有进程的父子关系
 */
-
 
 void do_fork();
 void do_system();
@@ -46,12 +52,36 @@ int main(int argc, char* argv[])
 	return ret;
 }
 
+static void signal_handler(int signo)
+{
+	if (signo == SIGCHLD)
+	{
+		//给当前进程的所有已结束的子进程收尸
+		for (;;)
+		{
+			pid_t childPid = wait(NULL);
+
+			if (childPid != -1)
+				printf("SIGCHLD - collect child pid: %d\n", childPid);
+			else
+				break;
+		}
+	}
+}
+
 void do_fork()
 {
+	//僵尸进程解决方法1：忽略SIGCHLD信号，当子进程结束后，会立即释放数据结构(PID，进程状态，进程返回值)，避免出现大量僵尸进程，导致pid标识耗尽，fork创建子进程失败；
+	//使用ps -el命令查看僵尸进程，状态为Z的进程
+	//signal(SIGCHLD, SIG_IGN);
+
+	//僵尸进程解决方法2：捕捉SIGCHLD信号，使用wait/waitpid来为子进程收尸；
+	signal(SIGCHLD, signal_handler);
+
 	//打印父进程的ID
 	printf("current pid = %d\n", getpid());
 
-	for (int start = 0; start < 1000; start++)
+	for (int start = 0; start < 10000; start++)
 	{
 		pid_t pid = fork();
 		if (pid > 0)
