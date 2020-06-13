@@ -25,11 +25,26 @@
 socket.h - socket  ioctl  bind  listen  accept  send  recv  shutdown  close
            socket  ioctl  connect  send  recv  shutdown  close
 
+文件描述符操作：
+write  read  发送或接收一个缓冲区数据
+writev  readv  发送或接收多个缓冲区数据
+
+TCP发送接收数据：
+send  recv  发送或接收一个缓冲区数据
+
+UDP发送接收报文：
+writeto  readfrom  发送或接收一个报文
+sendmsg  recvmsg  发送或接收多个报文
+
 错误显示：
 errno.h - errno  perror  strerror
 
 地址转换：
-inet_addr  inet_ntoa
+inet_addr  inet_ntoa  inet_aton
+
+字节序转换：
+arpa/inet.h - htonl  htons   主机序到网络序转换，后面l和s表示类型，分别表示16位还是32位
+			  ntohl  ntohs   网络序到主机序转换
 
 修改允许创建用户最大进程数量
 /etc/security/limits.d/90-nproc.conf
@@ -45,9 +60,12 @@ sar -n SOCK 查看网络流量
 iostat -x  查看磁盘读写性能
 
 修改iptables防火墙规则
+/etc/sysconfig/iptables
+
 service iptables status
 iptables -F INPUT
 iptables -F OUTPUT
+service iptables save
 
 */
 
@@ -75,9 +93,9 @@ int main(int argc, char* argv[])
 	int sockfd = 0;
 	int result = 0;
 
-	signal(SIGKILL, signal_handler);
 	signal(SIGINT, signal_handler);
 	signal(SIGCHLD, signal_handler);
+	signal(SIGPIPE, SIG_IGN);
 
 	//创建socket文件描述符，因特网协议族的TCP协议，第一个特定类型(一般只有一个，所以是0)
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -152,16 +170,22 @@ int main(int argc, char* argv[])
 					int lenBuff = 1024;
 					bzero(buff, 1024);
 
-					int readLen = recv(clientfd, buff, lenBuff, 0);
+					int readLen = 0;
+					uint16_t len = 0;
+					
+					readLen = recv(clientfd, &len, sizeof(uint16_t), MSG_WAITALL);
+					len = ntohs(len);
+
+					readLen = recv(clientfd, buff, len, MSG_WAITALL);
 					if (readLen > 0)
 					{
-						printf("%s(%d): %s\n", inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port, buff);
+						printf("%s(%d)(%d): %s\n", inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port, len, buff);
 
 						bzero(buff, 1024);
 						strcpy(buff, "Hi, I have received your message.");
 						lenBuff = strlen(buff);
 
-						int lenSend = send(clientfd, buff, lenBuff, 0);
+						int lenSend = send(clientfd, buff, lenBuff, MSG_DONTWAIT);
 					}
 					else
 					{

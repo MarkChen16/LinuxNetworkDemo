@@ -78,9 +78,15 @@ int main(int argc, char* argv[])
 			int lenBuff = 1024;
 
 			strcpy(buff, "Hi, I am Mark Chen.");
-			lenBuff = send(clientfd, buff, strlen(buff), 0);
 
-			int recvCount = recv(clientfd, buff, lenBuff, 0);
+			//主机序到网络序转换
+			uint16_t len = strlen(buff);
+
+			uint16_t nsLen = htons(len);
+			lenBuff = send(clientfd, &nsLen, sizeof(uint16_t), MSG_DONTWAIT);
+			lenBuff = send(clientfd, buff, len, MSG_DONTWAIT);
+
+			int recvCount = recv(clientfd, buff, lenBuff, MSG_TRUNC);
 
 			close(clientfd);
 

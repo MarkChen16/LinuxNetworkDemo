@@ -3,6 +3,9 @@
 
 #include <unistd.h>
 
+//调试fork子进程
+//gdb命令：set follow-fork-mode child;set detach-on-fork off;
+
 //数据段
 static int g_val = 1;
 
@@ -54,5 +57,6 @@ int main(int argc, char* argv[])
 		ret = 1;
 	}
 
+	pause();
 	return ret;
 }

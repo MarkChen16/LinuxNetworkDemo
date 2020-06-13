@@ -8,7 +8,12 @@
 /*
 信号：捕捉系统核心发给进程的信号，比如SIGALRM、SIGKILL、 SIGTERM等等，使用signal()函数注册信号的处理函数；
 
-相关函数：signal()、raise()、kill()
+简单的处理函数：SIG_IGN
+signal()、raise()、kill()
+
+
+更复杂的函数：信号排队，可以设置过滤信号
+sigaction()
 
 */
 
@@ -19,10 +24,10 @@ static void signal_handler(int signo)
 		//定时器信号
 		printf("get signal: SIGALRM\n");
 	}
-	else if (signo == SIGKILL)
+	else if (signo == SIGINT)
 	{
-		//kill信号
-		printf("get signal: SIGKILL\n");
+		//INT信号
+		printf("get signal: SIGINT\n");
 	}
 	else if (signo == SIGCHLD)
 	{
@@ -41,12 +46,13 @@ int main(int argc, char* argv[])
 	int ret = 0;
 
 	//捕捉指定信号
-	signal(SIGCHLD, signal_handler);
-	signal(SIGKILL, signal_handler);
-	signal(SIGALRM, signal_handler);
+	signal(SIGKILL, SIG_IGN);		//KILL、STOP信号不可捕捉，设置无效
+	signal(SIGSTOP, SIG_IGN);
 
-	//忽略指定信号
-	signal(SIGINT, SIG_IGN);
+	signal(SIGCHLD, signal_handler);	//子进程结束，wait给子进程收尸
+	signal(SIGALRM, signal_handler);	//定时器触发，alarm设置的定时器
+	signal(SIGPIPE, signal_handler);			//两次向已关闭的socket写入数据触发，系统默认是退出进程，设置为SIG_IGN后， send将返回-1，erron为EPIPE
+	signal(SIGINT, signal_handler);			//Ctrl+C键按下时触发，默认退出进程
 
 	//触发SIGCHLD信号
 	//for (int i = 0; i < 3; i++)

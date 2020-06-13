@@ -11,10 +11,14 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
+#include <semaphore.h>
+
 /*
 信号量：常用于进程间同步访问资源
 
 相关函数：ftok  semget  semctl  semop semtimedop
+
+另一个信号量的实现 semaphore.h - sem_t sem_init  sem_wait  sem_post
 */
 
 //2.6内核已经注释了semun的定义，需要在程序里面自行定义
@@ -31,7 +35,7 @@ void setSem(int semID, int val)
 {
 	union semun sem;
 	sem.val = val;
-
+	
 	int result = semctl(semID, 0, SETVAL, sem);
 }
 
