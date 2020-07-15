@@ -51,8 +51,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msgsvr", "7\msgsvr\msgsvr.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "msgclient", "7\msgclient\msgclient.vcxproj", "{93B137CC-5B8B-45B4-905E-11EAACF5ADA8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "9-数据IO复用", "9-数据IO复用", "{0727E06C-7D11-4389-81BF-81E0C3DB87AA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM

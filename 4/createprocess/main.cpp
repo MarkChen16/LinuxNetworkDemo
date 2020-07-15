@@ -6,7 +6,8 @@
 #include <sys/wait.h>
 
 /*
-fork()：创建子进程
+fork()：创建子进程，写时复制父进程数据
+vfork()：创建子进程，共享父进程数据
 system()：新建子进程，调用shell外部命令，通过调用fork()、execve()和waitpid()实现
 exec()：新建进程代替原进程，使用原进程的资源，进程ID也一样。
 
@@ -19,6 +20,7 @@ exec()：新建进程代替原进程，使用原进程的资源，进程ID也一
 */
 
 void do_fork();
+void do_vfork();
 void do_system();
 void do_exec();
 
@@ -40,6 +42,10 @@ int main(int argc, char* argv[])
 			do_fork();
 		}
 		else if (createType == 2)
+		{
+			do_vfork();
+		}
+		else if (createType == 3)
 		{
 			do_system();
 		}
@@ -118,6 +124,39 @@ void do_fork()
 	}
 }
 
+void do_vfork()
+{
+	signal(SIGCHLD, SIG_IGN);
+
+	int data = 1;
+
+	pid_t pid = vfork();
+	if (pid > 0)
+	{
+		printf("parent: data = %i\n", data);
+
+		//等待子进程结束
+		int status = 0;
+		waitpid(pid, &status, 0);
+
+		//vfork子进程共享父进程数据，子进程修改数据后，父进程显示修改后的数据
+		printf("child after: data = %i\n", data);
+	}
+	else if (pid == 0)
+	{
+		printf("child: data = %i\n", data);
+		data = 2;
+
+		_exit(0);
+	}
+	else
+	{
+		//复制进程失败
+		printf("Failed to fork.\n");
+	}
+
+}
+
 void do_system()
 {
 	int ret = system("ping www.baidu.com -c 5");
@@ -128,6 +167,7 @@ void do_exec()
 {
 	char* argv[] = {"/bin/ls", "-l", NULL};
 
+	//execve将ls程序加载到本程序空间
 	if (execve("/bin/ls", argv, NULL) < 0)
 	{
 		printf("Failed to execve.\n");

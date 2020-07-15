@@ -12,11 +12,12 @@
 #include <sys/ioctl.h>
 
 /*
-命令xinfo [-p] [-r] [-w]
+命令./infosheet.out [-p] [-r] [-w] [-m]
 参数说明：
 -p：打印所有记录
 -r：读取指定的记录
 -w：写入新的记录
+-m: 修改指定的记录
 
 使用open close fstat lseek read write mmap munmap fcntl ioctl
 
@@ -127,28 +128,28 @@ int main(int argc, char* argv[])
 			int nReadBuffCount = 10;
 			int rev2 = ioctl(fd, FIONREAD, &nReadBuffCount);
 
+			//映射到内存，使用指针操作，速度更快
+			StudInfo* ptrInfo = NULL;
+			ptrInfo = (StudInfo*)mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+			if (ptrInfo == (StudInfo*)-1)
+			{
+				printf("Failed to map address.\n");
+				ret = 3;
+
+				ptrInfo = NULL;
+			}
+
 			//判断参数
 			if (strcmp(params, "-p") == 0 && argc == 2)
 			{
 				//打印所有记录=========================
-				StudInfo* ptrInfo = NULL;
-
-				//映射到内存，使用指针操作，速度更快
-				ptrInfo = (StudInfo*)mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-				if (ptrInfo == (StudInfo*)-1)
-				{
-					printf("Failed to map address.\n");
-					ret = 3;
-				}
-				else
+				//使用内存映射访问数据
+				if (ptrInfo != NULL)
 				{
 					for (int i = 0; i < countInfo; i++)
 					{
 						ptrInfo[i].print();
 					}
-
-					//取消映射
-					munmap(ptrInfo, st.st_size);
 				}
 			}
 			else if (strcmp(params, "-r") == 0 && argc == 3)
@@ -216,10 +217,31 @@ int main(int argc, char* argv[])
 					fsync(fd);
 				}
 			}
+			else if (strcmp(params, "-m") == 0 && argc == 7)
+			{
+				//使用内存映射修改数据
+				int modifIndex = atoi(argv[2]) - 1;
+
+				if (ptrInfo != NULL && modifIndex >= 0 && modifIndex < countInfo)
+				{
+					ptrInfo[modifIndex].id = atoi(argv[3]);	//执行man atoi查询用法
+					memset(ptrInfo[modifIndex].name, 0x00, NAME_MAX_LEN - 1);
+					strncpy(ptrInfo[modifIndex].name, argv[4], strlen(argv[4]) < NAME_MAX_LEN ? strlen(argv[4]) : NAME_MAX_LEN - 1);
+					ptrInfo[modifIndex].age = atoi(argv[5]);
+					ptrInfo[modifIndex].score = atoi(argv[6]);
+				}
+			}
 			else
 			{
 				printf("Error: Invalid parameters\n");
 				ret = 1;
+			}
+
+			//取消映射
+			if (ptrInfo != NULL)
+			{
+				munmap(ptrInfo, st.st_size);
+				fsync(fd);
 			}
 		}
 
