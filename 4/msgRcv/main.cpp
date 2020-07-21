@@ -13,10 +13,27 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-//查询消息队列数量、单条消息大小和消息队列消息数量限制
-//ipcs -l	显示ipc资源的限制
+//查询消息队列最大数量、单条消息最大字节数和消息队列最大字节数
+//ipcs		查询所有ipc使用情况
 //ipcs -u	显示ipc资源已使用情况
-//修改ipc资源的最大限制 /etc/sysctl.conf，重启后生效
+//ipcs -l	显示ipc资源的限制
+//ipcs -p	显示ipc最后操作pid
+
+/*
+修改ipc资源的最大限制 /etc/sysctl.conf，重启后生效
+
+------ Messages: Limits --------
+max queues system wide = 3716
+max size of message (bytes) = 65536
+default max size of queue (bytes) = 272000000
+
+*/
+
+/*
+在/etc/rc.d/rc.local脚本文件增加以下命令
+echo 272000000 > /proc/sys/kernel/msgmnb;
+
+*/
 
 //消息类型定义
 enum MsgType
