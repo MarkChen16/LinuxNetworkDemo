@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7e873b1d-e5c3-4199-a151-d1cbde52d00d}</ProjectGuid>
+    <ProjectGuid>{665b3a52-690f-436d-9f6d-2b179079a6ad}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>shmDemo</RootNamespace>
+    <RootNamespace>shmClient</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
