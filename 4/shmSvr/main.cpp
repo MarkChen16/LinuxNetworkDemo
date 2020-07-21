@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		//创建内存共享和信号量，0666表示拥有进程、进程所在组和其他进程都可以读写
+		//创建内存共享和信号量，0666表示拥有用户、用户所在组和其他用户的进程都可以读写
 		int shmID = shmget(keyShm, sizeof(shm_data_t), IPC_CREAT | 0666);
 		int semID = semget(keySem, 1, IPC_CREAT | 0666);	//信号数量为1
 		if (shmID == -1 || semID == -1)

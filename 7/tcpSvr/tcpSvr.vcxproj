@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{13ef79c5-7af9-4638-9996-f744062b6c10}</ProjectGuid>
+    <ProjectGuid>{73774c61-7907-4545-8ed2-bcd8f041f970}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>msgsvr</RootNamespace>
+    <RootNamespace>tcpSvr</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>

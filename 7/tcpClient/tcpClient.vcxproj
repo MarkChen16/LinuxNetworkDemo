@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{93b137cc-5b8b-45b4-905e-11eaacf5ada8}</ProjectGuid>
+    <ProjectGuid>{69099ebd-e5c1-4c96-b26d-9444ec25c175}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>msgclient</RootNamespace>
+    <RootNamespace>tcpClient</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>

@@ -22,8 +22,9 @@
 示例：
 
 相关函数：
-socket.h - socket  ioctl  bind  listen  accept  send  recv  shutdown  close
-           socket  ioctl  connect  send  recv  shutdown  close
+socket.h
+服务端：socket  ioctl  bind  listen  accept  send  recv  shutdown  close
+客户端：socket  ioctl  connect  send  recv  shutdown  close
 
 文件描述符操作：
 write  read  发送或接收一个缓冲区数据
@@ -65,12 +66,13 @@ iostat -x  查看磁盘读写性能
 service iptables status
 iptables -F INPUT
 iptables -F OUTPUT
+iptables -A -s 192.168.189.137 -p tcp -dport 1800 -j ACCEPT
 service iptables save
 
 */
 
 #define HOST_PORT 1800
-#define HOST_LISTEN_COUNT 20
+#define HOST_LISTEN_COUNT 100
 
 static void signal_handler(int signo)
 {
@@ -110,7 +112,7 @@ int main(int argc, char* argv[])
 
 	//获取第一块网卡配置的IP地址
 	struct ifreq ifr;
-	strcpy(ifr.ifr_name, "eth1");
+	strcpy(ifr.ifr_name, "eth0");
 
 	result = ioctl(sockfd, SIOCGIFADDR, &ifr);
 	if (result == -1)
