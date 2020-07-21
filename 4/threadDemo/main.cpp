@@ -7,15 +7,15 @@
 
 /*
 多线程：是程序执行路径的不同分支，进程启动只有一个主线程，多线程对资源访问需要同步。
-Linux多线程是轻量级的进程，没有支持挂起、唤醒操作；
+Linux的线程是轻量级的进程，没有支持挂起、唤醒操作；
 
 库依赖项：pthread
 pthread_t  pthread_mutex_t
 
 相关函数：
 创建线程 pthread_create  pthread_exit  pthread_join
-互斥量同步 pthread_mutex_init  pthread_mutex_destory  pthread_mutex_lock  pthread_mutex_unlock
-信号量同步 
+互斥量同步 pthread_mutex_init  pthread_mutex_lock  pthread_mutex_unlock  pthread_mutex_destory
+信号量同步 semget  semop  semctl
 */
 
 int main(int argc, char* argv[])

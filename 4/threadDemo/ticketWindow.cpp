@@ -20,6 +20,14 @@ TicketDB& TicketDB::getInstance()
 	return db;
 }
 
+TicketDB::TicketDB()
+	: m_currTicketNo(10000)
+	, m_ticketCount(0)
+{
+	//初始化互斥量
+	pthread_mutex_init(&m_mutex, NULL);
+}
+
 TicketDB::~TicketDB()
 {
 	//释放互斥量
@@ -56,14 +64,6 @@ bool TicketDB::buyTicket(const TicketWindow& window, int buyNum)
 
 		printf("窗口%02d出售%d张火车票成功，余量还有%d张！\n", window.getWindowID(), buyNum, m_ticketCount);
 	}
-}
-
-TicketDB::TicketDB()
-	: m_currTicketNo(10000)
-	, m_ticketCount(0)
-{
-	//初始化互斥量
-	pthread_mutex_init(&m_mutex, NULL);
 }
 
 TicketWindow::TicketWindow(int windowID)
