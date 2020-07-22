@@ -19,24 +19,14 @@
 
 #define HOST_PORT 1800
 
-static void signal_handler(int signo)
-{
-	if (signo == SIGINT)
-	{
-		exit(EXIT_SUCCESS);
-	}
-	else
-	{
-		//给结束的子进程收尸
-		while (wait(NULL) != -1);
-	}
-}
-
 int main(int argc, char* argv[])
 {
-	int result = 0;
+	int ret = 0;
 	int clientCount = 100000;
 	const char* remoteIP = "127.0.0.1";
+
+	signal(SIGCHLD, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 
 	if (argc >= 2)
 		remoteIP = argv[1];
@@ -44,18 +34,18 @@ int main(int argc, char* argv[])
 	if (argc >= 3)
 		clientCount = atoi(argv[2]);
 
-	signal(SIGINT, signal_handler);
-	signal(SIGCHLD, signal_handler);
-
 	sockaddr_in hostAddr;
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr(remoteIP);
 	hostAddr.sin_port = htons(HOST_PORT);
 	bzero(hostAddr.sin_zero, 8);
 
-	//创建客户端子进程
+	int createPidCount = 0;
 	for (int i = 0; i < clientCount; i++)
 	{
+		//创建客户端子进程
+		createPidCount++;
+
 		pid_t pid = fork();
 		if (pid == 0)
 		{
@@ -67,7 +57,7 @@ int main(int argc, char* argv[])
 				_exit(EXIT_FAILURE);
 			}
 
-			result = connect(clientfd, (sockaddr*)&hostAddr, sizeof(sockaddr_in));
+			int result = connect(clientfd, (sockaddr*)&hostAddr, sizeof(sockaddr_in));
 			if (result == -1)
 			{
 				perror("client-socket");
@@ -94,7 +84,20 @@ int main(int argc, char* argv[])
 		}
 		else if (pid > 0)
 		{
-			printf("%05d new client: %d\n", i, pid);
+			printf("%06d new client: %d\n", i + 1, pid);
+
+			//及时清理一次已经结束的子进程，为后续的fork调用预留系统资源
+			//while (wait(NULL) != -1) {};
+
+			//每次只清理一个子进程,提高父进程执行效率
+			//wait(NULL);
+
+			//在创建一定数量的子进程后开始清理子进程
+			if (createPidCount >= 100)
+			{
+				while (wait(NULL) != -1) {};
+				createPidCount = 0;
+			}
 		}
 		else
 		{
@@ -102,6 +105,5 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	pause();
-	exit(EXIT_SUCCESS);
+	return ret;
 }

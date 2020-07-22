@@ -60,44 +60,64 @@ netstat -i  查看网络错误数量
 sar -n SOCK 查看网络流量
 iostat -x  查看磁盘读写性能
 
-修改iptables防火墙规则
+防火墙规则
+ufw enable
+ufw disable
+
 /etc/sysconfig/iptables
 
-service iptables status
+清除所有规则
+iptables -L
 iptables -F INPUT
 iptables -F OUTPUT
+iptables -F FORWARD
+iptables -F
+
+//添加规则
 iptables -A -s 192.168.189.137 -p tcp -dport 1800 -j ACCEPT
+
+service iptables status
 service iptables save
+service iptables restart
+
+Ctrl + Z暂时运行当前进程，fg [n]将进程放在前台继续运行，bg [n]将进程放在后台继续运行； 
+
+杀死所有进程
+killall -9 tcpClient.out
 
 */
 
 #define HOST_PORT 1800
-#define HOST_LISTEN_COUNT 100
+#define HOST_LISTEN_COUNT 5000
 
-static void signal_handler(int signo)
+static void sig_int(int signo)
 {
-	//处理系统信号
-	if (signo == SIGINT || signo == SIGKILL)
-	{
-		//Ctrl + C退出程序
-		printf("server is closing...\n");
-		exit(EXIT_SUCCESS);
-	}
-	else if (signo == SIGCHLD)
-	{
-		//给已经结束的子进程收尸
-		while (wait(NULL) != -1);
-	}
+	printf("server is closing...\n");
+	exit(EXIT_SUCCESS);
+}
+
+void sig_chil(int sigNo)
+{
+	while (wait(NULL) != -1) {};
+
+	//防止信号被重置
+	signal(SIGCHLD, sig_chil);
+}
+
+void sig_pipe(int sigNo)
+{
+	signal(SIGPIPE, sig_pipe);
 }
 
 int main(int argc, char* argv[])
 {
 	int sockfd = 0;
+	int ret = 0;
 	int result = 0;
 
-	signal(SIGINT, signal_handler);
-	signal(SIGCHLD, signal_handler);
-	signal(SIGPIPE, SIG_IGN);
+	signal(SIGINT, sig_int);
+	signal(SIGCHLD, sig_chil);
+	signal(SIGPIPE, sig_pipe);
 
 	//创建socket文件描述符，因特网协议族的TCP协议，第一个特定类型(一般只有一个，所以是0)
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -220,5 +240,5 @@ int main(int argc, char* argv[])
 	close(sockfd);
 	//shutdown(sockfd, SHUT_RDWR);	//关闭读和写端，等同于close(sockfd)
 
-	exit(EXIT_SUCCESS);
+	return ret;
 }
