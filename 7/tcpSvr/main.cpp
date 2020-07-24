@@ -20,6 +20,40 @@
 
 /*
 示例：
+后端服务程序的多进程和多线程的选择，或者两者都用。
+
+两者特点：
+1、数据共享
+进程之间需要IPC，但数据私有，同步简单；
+线程之间共享同一份进程数据，但同步复杂，需要互斥、读写锁和信号量各种同步机制；
+
+2、内存和CPU使用率
+进程占用内存多，CPU使用率低；
+线程占有内存少，CPU使用率多，需要在线程之间切换；
+
+3、创建销毁开销
+进程开销大，切换速度慢；
+线程开销小，切换速度快；
+
+4、可靠性
+进程间独立运行，可靠性高；
+线程在一个进程内运行，一个异常导致整个进程退出，可靠性低；
+
+5、分布性
+进程适应于多核，多机分布；
+线程适应于多核分布；
+
+两者怎么选：
+1、处理简单，需要频繁创建销毁，优先用线程；
+
+2、需要大量计算，优先用线程；
+
+3、数据强相关的处理，优先使用线程；
+
+4、多机分布的用进程；多核分布的用线程；
+
+5、可以采用多进程，子进程采用多线程的方式，高效又可靠；
+
 
 相关函数：
 socket.h
@@ -82,13 +116,16 @@ service iptables restart
 
 Ctrl + Z暂时运行当前进程，fg [n]将进程放在前台继续运行，bg [n]将进程放在后台继续运行； 
 
+计算某个进程的父子进程数量
+ps -el | grep tcpClient.out | wc -c
+
 杀死所有进程
 killall -9 tcpClient.out
 
 */
 
 #define HOST_PORT 1800
-#define HOST_LISTEN_COUNT 5000
+#define HOST_LISTEN_COUNT 20000
 
 static void sig_int(int signo)
 {
@@ -156,9 +193,9 @@ int main(int argc, char* argv[])
 		perror("bind");
 		exit(EXIT_FAILURE);
 	}
-	printf("bind socket ...\n");
+	printf("bind socket(%s: %i)\n", localhostIP, HOST_PORT);
 
-	//开始侦听
+	//开始侦听，队列最多包含N个连接，如果队列已满，协议支持重传，连接会被忽略稍后再尝试连接；否则直接返回拒绝给客户端；
 	result = listen(sockfd, HOST_LISTEN_COUNT);
 	if (result == -1)
 	{

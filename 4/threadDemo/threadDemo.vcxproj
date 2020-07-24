@@ -75,10 +75,18 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClCompile Include="atomicTicketDB.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mutexTicketDB.cpp" />
+    <ClCompile Include="rwlockTicketDB.cpp" />
+    <ClCompile Include="spinTicketDB.cpp" />
     <ClCompile Include="ticketWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="atomicTicketDB.h" />
+    <ClInclude Include="mutexTicketDB.h" />
+    <ClInclude Include="rwlockTicketDB.h" />
+    <ClInclude Include="spinTicketDB.h" />
     <ClInclude Include="ticketWindow.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

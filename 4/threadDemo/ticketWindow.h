@@ -10,53 +10,51 @@
 #include <sched.h>
 #include <semaphore.h>
 
-class MutexLocker;
+//原子变量
+#include <atomic>
+
+
 class TicketDB;
 class TicketWindow;
 
-//互斥锁
-class MutexLocker
-{
-public:
-	explicit MutexLocker(pthread_mutex_t* mutex);
-	virtual ~MutexLocker();
-
-protected:
-	pthread_mutex_t* m_mutex;
-};
-
-//火车票数据库
 class TicketDB
 {
 public:
-	static TicketDB& getInstance();
+	explicit TicketDB()
+		: m_ticketCount(0)
+	{
+		pthread_cond_init(&m_cond, NULL);
+		pthread_mutex_init(&m_mutexWait, NULL);
+		pthread_mutex_init(&m_mutexSignal, NULL);
+	}
 
-	virtual ~TicketDB();
+	virtual ~TicketDB()
+	{
+		pthread_cond_destroy(&m_cond);
+		pthread_mutex_destroy(&m_mutexWait);
+		pthread_mutex_destroy(&m_mutexSignal);
+	}
 
-	void addTicket(int ticketNum);
-	void removeTicket(int ticketNum);
-	bool buyTicket(const TicketWindow& window, int buyNum);
+	virtual void addTicket(int ticketNum);
+	virtual void removeTicket(int ticketNum) = 0;
+	virtual bool buyTicket(int windowID, int buyNum) = 0;
+	virtual int queryTicket() = 0;
+
+	void waitPutTicket();
 
 protected:
-
-
-private:
-	explicit TicketDB();
-
-private:
-	int m_currTicketNo;
 	int m_ticketCount;
 
-	pthread_mutex_t m_mutex;
+	pthread_cond_t m_cond;
+	pthread_mutex_t m_mutexWait;
+	pthread_mutex_t m_mutexSignal;
 };
-
-#define TDB TicketDB::getInstance()
 
 //售票窗口
 class TicketWindow
 {
 public:
-	explicit TicketWindow(int windowID = 0);
+	explicit TicketWindow(TicketDB* TDB, int windowID = 0);
 	virtual ~TicketWindow();
 
 	bool start();
@@ -64,17 +62,18 @@ public:
 	void stop();
 
 	int getWindowID() const;
-	void setWindowID(int id);
+
+	void waitPutTicket();
+	void buyTicket(int buyCount);
 
 protected:
 	static void* run(void *arg);
 
 private:
+	TicketDB* m_TDB;
 	int m_windowID;
 
-	bool m_askForExit;
-	pthread_mutex_t m_mutex;
-
+	//使用原子变量替换互斥锁
+	std::atomic_bool m_askForExit;
 	pthread_t m_thr;
-
 };
