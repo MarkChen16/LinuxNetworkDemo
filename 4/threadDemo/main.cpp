@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
 		printf("开始放票(%i)...\n", i);
 	}
 
+	sleep(1);
 	pTicketDB->addTicket(1000000);
 
 	//10秒后停止售票
