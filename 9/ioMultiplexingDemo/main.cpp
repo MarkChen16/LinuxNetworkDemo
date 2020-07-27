@@ -34,6 +34,9 @@ epoll IO复用：
 
 例子：主线程用于处理客户端连接，工作线程负责通信；
 
+
+修复单个进程打开的最大文件数量：getrlimit  getrlimit
+
 */
 
 #define HOST_PORT 1800
@@ -68,7 +71,8 @@ int main(int argc, char argv[])
 	struct rlimit limitData;
 	getrlimit(RLIMIT_NOFILE, &limitData);
 	
-	limitData.rlim_cur = 10000;
+	limitData.rlim_cur = 100000;
+	limitData.rlim_max = 1000000;
 	setrlimit(RLIMIT_NOFILE, &limitData);
 
 	//创建服务端socket，指定是因特网的TCP协议

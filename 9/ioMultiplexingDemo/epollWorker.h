@@ -18,6 +18,8 @@ epoll IO复用（高并发服务端）：
 LT模式：标准模式(默认)，适用于阻塞和非阻塞socket；如果通知后，不做处理，或者没有处理完，下一次还会通知；
 ET模式：高效模式，适用于非阻塞socket；同一个状态在同一时间段内只通知一次；
 
+epoll相关函数： epoll_create  epoll_ctl  epoll_wait
+
 */
 
 class EpollWorker : public baseWorker
