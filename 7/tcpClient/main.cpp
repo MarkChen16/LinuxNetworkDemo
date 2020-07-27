@@ -67,14 +67,15 @@ int main(int argc, char* argv[])
 			char buff[1024];
 			int lenBuff = 1024;
 
-			strcpy(buff, "Hi, I am Mark Chen.");
+			strcpy(buff + sizeof(uint16_t), "Hi, Mark.");
 
 			//主机序到网络序转换
-			uint16_t len = strlen(buff);
-
+			uint16_t len = strlen(buff + sizeof(uint16_t));
 			uint16_t nsLen = htons(len);
-			lenBuff = send(clientfd, &nsLen, sizeof(uint16_t), MSG_DONTWAIT);
-			lenBuff = send(clientfd, buff, len, MSG_DONTWAIT);
+			memcpy(buff, &nsLen, sizeof(uint16_t));
+
+			//注意：如果长度和数据分开发送，有可能数据报文先到达，读取顺序就错了
+			lenBuff = send(clientfd, buff, len + sizeof(uint16_t), 0);
 
 			int recvCount = recv(clientfd, buff, lenBuff, MSG_TRUNC);
 

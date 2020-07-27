@@ -251,6 +251,7 @@ int main(int argc, char* argv[])
 						perror("recv");
 					}
 
+					shutdown(clientfd, SHUT_RDWR);
 					close(clientfd);
 
 					//fork子进程用_exit()退出程序，不做清理IO缓冲
@@ -270,12 +271,15 @@ int main(int argc, char* argv[])
 		}
 		catch (...)
 		{
+			perror("catch");
 		}
 	}
 
-	//关闭socket
+	//关闭连接
+	shutdown(sockfd, SHUT_RDWR);
+
+	//关闭socket文件
 	close(sockfd);
-	//shutdown(sockfd, SHUT_RDWR);	//关闭读和写端，等同于close(sockfd)
 
 	return ret;
 }
