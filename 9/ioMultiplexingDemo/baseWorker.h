@@ -2,6 +2,8 @@
 
 #include <pthread.h>
 
+#define BUFF_LEN 1024
+
 struct clientInfo
 {
 	int fd;

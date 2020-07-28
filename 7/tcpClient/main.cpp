@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 		}
 		else if (pid > 0)
 		{
-			printf("%06d new client: %d\n", i + 1, pid);
+			printf("%07d new client: %d\n", i + 1, pid);
 
 			//及时清理一次已经结束的子进程，为后续的fork调用预留系统资源
 			//while (wait(NULL) != -1) {};

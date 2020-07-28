@@ -20,6 +20,7 @@
 
 #include "baseWorker.h"
 #include "epollWorker.h"
+#include "selectWorker.h"
 
 /*
 
@@ -56,12 +57,24 @@ void sigpipe_handler(int signo)
 	signal(SIGPIPE, sigpipe_handler);
 }
 
-int main(int argc, char argv[])
+int main(int argc, char* argv[])
 {
 	int ret = 0;
 
 	int sockfd = 0;
 	int result = 0;
+
+	int ioMode = 1;
+	if (argc >= 2)
+	{
+		ioMode = atoi(argv[1]);
+	}
+
+	baseWorker* worker = SLWORKER;
+	if (ioMode == 1)
+		worker = SLWORKER;
+	else if (ioMode == 2)
+		worker = EPWORKER;
 
 	//处理信号
 	signal(SIGINT, sigint_handler);
@@ -142,7 +155,7 @@ int main(int argc, char argv[])
 				strcpy(info->addr, inet_ntoa(clientAddr.sin_addr));
 				info->port = clientAddr.sin_port;
 
-				EPWORKER->addClient(info);
+				worker->addClient(info);
 			}
 		}
 		catch (...)

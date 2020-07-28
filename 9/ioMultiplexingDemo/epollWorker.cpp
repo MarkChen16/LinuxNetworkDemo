@@ -27,6 +27,8 @@ EpollWorker::EpollWorker()
 
 EpollWorker::~EpollWorker()
 {
+	pthread_spin_destroy(&m_spin);
+
 	askForExit();
 	stop();
 }
@@ -60,8 +62,6 @@ void* EpollWorker::run(void* arg)
 	int result = 0;
 	char buff[BUFF_LEN];
 
-	int fdCount = 0;
-
 	EpollWorker* This = (EpollWorker*)arg;
 	assert(This);
 
@@ -77,7 +77,7 @@ void* EpollWorker::run(void* arg)
 		//获取新的客户端连接
 		std::vector<clientInfo*> newClientList;
 		{
-			//自旋锁
+			//自旋锁：要求实时性，临界时间很短的情况
 			SpinLocker locker(&This->m_spin);
 
 			if (This->m_hasNewClient)
@@ -108,8 +108,6 @@ void* EpollWorker::run(void* arg)
 				{
 					perror("epoll_ctl_1");
 				}
-
-				fdCount++;
 			}
 		}
 
@@ -201,9 +199,6 @@ void* EpollWorker::run(void* arg)
 					//释放客户端信息
 					delete cinfo;
 					cinfo = NULL;
-
-					fdCount--;
-					printf("fdCount = %d\n", fdCount);
 				}
 			}
 		}
