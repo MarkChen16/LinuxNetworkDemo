@@ -78,11 +78,13 @@
     <ClCompile Include="baseWorker.cpp" />
     <ClCompile Include="epollWorker.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="pollWorker.cpp" />
     <ClCompile Include="selectWorker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="baseWorker.h" />
     <ClInclude Include="epollWorker.h" />
+    <ClInclude Include="pollWorker.h" />
     <ClInclude Include="selectWorker.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

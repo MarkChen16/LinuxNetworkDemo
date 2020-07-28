@@ -1,36 +1,36 @@
-﻿#include "selectWorker.h"
+﻿#include "pollWorker.h"
 
 #include <memory.h>
 #include <assert.h>
 
-#include <sys/epoll.h>
-#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <fcntl.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
-#include <sys/types.h>
 
-#include <sys/select.h>
+#include <sys/poll.h>
 
-SelectWorker* SelectWorker::getInstance()
+PollWorker* PollWorker::getInstance()
 {
-	static SelectWorker worker;
+	static PollWorker worker;
 
 	return &worker;
 }
 
-SelectWorker::SelectWorker()
+PollWorker::PollWorker()
 	: baseWorker()
 	, m_askForExit(false)
 	, m_hasNewClient(false)
 {
 	pthread_spin_init(&m_spin, PTHREAD_PROCESS_SHARED);
-
+	
 	start();
 }
 
-SelectWorker::~SelectWorker()
+PollWorker::~PollWorker()
 {
 	pthread_spin_destroy(&m_spin);
 
@@ -38,24 +38,24 @@ SelectWorker::~SelectWorker()
 	stop();
 }
 
-bool SelectWorker::start()
+bool PollWorker::start()
 {
-	int result = pthread_create(&m_thr, NULL, SelectWorker::run, this);
+	int result = pthread_create(&m_thr, NULL, PollWorker::run, this);
 
 	return (result == 0);
 }
 
-void SelectWorker::askForExit()
+void PollWorker::askForExit()
 {
 	m_askForExit = true;
 }
 
-void SelectWorker::stop()
+void PollWorker::stop()
 {
 	pthread_join(m_thr, NULL);
 }
 
-void SelectWorker::addClient(clientInfo* info)
+void PollWorker::addClient(clientInfo* info)
 {
 	SpinLocker locker(&m_spin);
 
@@ -63,17 +63,15 @@ void SelectWorker::addClient(clientInfo* info)
 	m_hasNewClient = true;
 }
 
-void* SelectWorker::run(void* arg)
+void* PollWorker::run(void* arg)
 {
 	int result = 0;
 	char buff[BUFF_LEN];
 
-	std::vector<clientInfo*> cinfoList;
-	fd_set readfds, writefds;
-	FD_ZERO(&readfds);
-	FD_ZERO(&writefds);
+	std::map<int, clientInfo*> cinfoMap;
+	std::vector<pollfd> fdlst;
 
-	SelectWorker* This = (SelectWorker*)arg;
+	PollWorker* This = (PollWorker*)arg;
 	assert(This);
 
 	while (This->m_askForExit == false)
@@ -102,43 +100,42 @@ void* SelectWorker::run(void* arg)
 				if (!pInfo)
 					continue;
 
-				int clientfd = pInfo->fd;
-				FD_SET(clientfd, &readfds);
+				//添加客户端信息
+				cinfoMap[pInfo->fd] = pInfo;
 
-				cinfoList.push_back(pInfo);
+				//添加侦听列表
+				pollfd plfd;
+				plfd.fd = pInfo->fd;
+				plfd.events = POLLIN;	//注册想要侦听的事件events
+				fdlst.push_back(plfd);
 			}
 		}
 
-		if (cinfoList.size() <= 0)
+		if (cinfoMap.size() <= 0)
 		{
 			usleep(10);
 			continue;
 		}
 
 		//处理客户端socket事件
-		int nfds = getMaxFD(cinfoList);
-		fd_set rfds = readfds;
-		fd_set wfds = writefds;
-		timeval timeout;
-		timeout.tv_usec = 10000;
-		result = select(nfds + 1, &rfds, &wfds, NULL, &timeout);
+		result = poll(fdlst.data(), fdlst.size(), 10);
 		if (result < 0)
 		{
-			perror("select");
+			perror("poll");
 		}
 		else
 		{
 			std::vector<int> clrfds;
 
-			for (auto item = cinfoList.begin(); item != cinfoList.end(); item++)
+			for (int i = 0;i < fdlst.size(); i++)
 			{
-				clientInfo* cinfo = *item;
-				if (!cinfo)
-					continue;
+				int clientfd = fdlst[i].fd;
+				clientInfo* cinfo = cinfoMap[clientfd];
 
-				int clientfd = cinfo->fd;
-				if (FD_ISSET(clientfd, &rfds))
+				//判断当前触发的事件revents
+				if (fdlst[i].revents & POLLIN)
 				{
+					//socket读就绪=========================================================
 					//读取长度
 					int readLen = 0;
 					uint16_t len = 0;
@@ -159,15 +156,18 @@ void* SelectWorker::run(void* arg)
 					}
 					else
 					{
-						printf("%s(%d): %s\n", cinfo->addr, cinfo->port, buff);
+						if (cinfo)
+						{
+							printf("%s(%d): %s\n", cinfo->addr, cinfo->port, buff);
+						}
 
-						//加入侦听写的FD列表，清除读的FD列表
-						FD_CLR(clientfd, &readfds);
-						FD_SET(clientfd, &writefds);
+						//修改想要侦听的事件
+						fdlst[i].events = POLLOUT;
 					}
 				}
-				else if (FD_ISSET(clientfd, &wfds))
+				else if (fdlst[i].revents & POLLOUT)
 				{
+					//socket写就绪=========================================================
 					//发送数据
 					bzero(buff, 1024);
 					strcpy(buff, "Hi, I have received your message.");
@@ -179,9 +179,11 @@ void* SelectWorker::run(void* arg)
 						perror("send");
 					}
 
-					//通信结束
-					FD_CLR(clientfd, &writefds);
-
+					clrfds.push_back(clientfd);
+				}
+				else
+				{
+					//socket描述符发现错误、连接关闭，或者poll非法操作======================
 					clrfds.push_back(clientfd);
 				}
 			}
@@ -197,15 +199,19 @@ void* SelectWorker::run(void* arg)
 				//关闭socket描述符
 				close(clrfd);
 
-				//移除记录
-				for (auto item = cinfoList.begin();item != cinfoList.end();item++)
+				//释放客户端信息
+				if (cinfoMap[clrfd])
 				{
-					if ((*item)->fd == clrfd)
-					{
-						//释放客户端信息
-						delete (*item);
+					delete cinfoMap[clrfd];
+					cinfoMap.erase(clrfd);
+				}
 
-						cinfoList.erase(item);
+				//移除侦听列表
+				for (auto item = fdlst.begin(); item != fdlst.end(); item++)
+				{
+					if ((*item).fd == clrfd)
+					{
+						fdlst.erase(item);
 						break;
 					}
 				}
@@ -216,17 +222,4 @@ void* SelectWorker::run(void* arg)
 	}
 
 	pthread_exit(NULL);
-}
-
-int SelectWorker::getMaxFD(std::vector<clientInfo*>& cinfoList)
-{
-	int maxFD = -1;
-
-	for (auto item = cinfoList.begin(); item != cinfoList.end(); item++)
-	{
-		if (maxFD < (*item)->fd)
-			maxFD = (*item)->fd;
-	}
-
-	return maxFD;
 }

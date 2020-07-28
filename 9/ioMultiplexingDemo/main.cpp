@@ -19,26 +19,29 @@
 #include <fcntl.h>
 
 #include "baseWorker.h"
-#include "epollWorker.h"
 #include "selectWorker.h"
+#include "pollWorker.h"
+#include "epollWorker.h"
 
 /*
+多路IO复用：适用于连接比较多，活动状态的连接比较少的情况；
 
-select IO复用：
-适用于描述符量级小的场景，通过轮询三种fd列表的方式通知，有数量限制，一般是1024；
+select IO复用：select(nfds, readfds, writefds, errfds, timeout)
+适用于描述符量级小的场景，通过轮询三种fd列表的方式通知，有数量限制，一般是1024，原因是fd_set采用数据位来表示fd的状态；
 
-poll IO复用：
-适用于描述符量级小的场景，优化select，侦听每个fd的某个事件；
+poll IO复用：poll(fds, nfs, timeout)
+适用于描述符量级一般的场景，优化select，侦听每个fd的某个事件，没有描述符数量限制；
 
-epoll IO复用：
-适用于描述符量级比较大的场景，通过注册fd和回调函数，内部使用红黑树查询；
+epoll IO复用：epoll_create  epoll_ctl  epoll_wait
+适用于描述符量级比较大的场景，通过注册fd指定的事件，内核通过红黑树查找fd结构，没有描述符数量受单个进程最大打开文件数量限制；
+修复单个进程打开的最大文件数量：getrlimit  getrlimit；
 
-例子：主线程用于处理客户端连接，工作线程负责通信；
+select和poll在大量描述符的时候效率比较低，每个调用都需要将描述符结构复制到内核空间，通过轮询状态来返回；
 
-
-修复单个进程打开的最大文件数量：getrlimit  getrlimit
 
 */
+
+//例子：主线程用于处理客户端连接，工作线程负责通信；
 
 #define HOST_PORT 1800
 #define HOST_LISTEN_COUNT 20000
@@ -74,6 +77,8 @@ int main(int argc, char* argv[])
 	if (ioMode == 1)
 		worker = SLWORKER;
 	else if (ioMode == 2)
+		worker = PLWORKER;
+	else if (ioMode == 3)
 		worker = EPWORKER;
 
 	//处理信号

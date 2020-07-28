@@ -9,20 +9,20 @@
 
 
 /*
-select IO复用：
-适用于描述符量级小，默认是1024，采用轮询socket状态的方式；
+poll IO复用：
+适用于描述符量级中等，采用轮询socket状态的方式；
 
-相关函数：select
+相关函数：poll
 
 */
 
-class SelectWorker : public baseWorker
+class PollWorker : public baseWorker
 {
 public:
-	static SelectWorker* getInstance();
+	static PollWorker* getInstance();
 
-	explicit SelectWorker();
-	virtual ~SelectWorker();
+	explicit PollWorker();
+	virtual ~PollWorker();
 
 	bool start() override;
 	void askForExit() override;
@@ -34,9 +34,6 @@ protected:
 	static void* run(void* arg);
 
 private:
-	static int getMaxFD(std::vector<clientInfo*>& cinfoList);
-
-private:
 	pthread_t m_thr;
 	std::atomic_bool m_askForExit;
 
@@ -45,4 +42,4 @@ private:
 	bool m_hasNewClient;
 };
 
-#define SLWORKER SelectWorker::getInstance()
+#define PLWORKER PollWorker::getInstance()
