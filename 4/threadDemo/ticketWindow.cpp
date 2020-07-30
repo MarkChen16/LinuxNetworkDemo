@@ -4,7 +4,7 @@
 
 void TicketDB::addTicket(int ticketNum)
 {
-	MutexLocker locker(&m_mutexSignal);
+	MutexLocker locker(&m_mutexCond);
 
 	if (ticketNum > 0)
 	{
@@ -14,11 +14,11 @@ void TicketDB::addTicket(int ticketNum)
 
 void TicketDB::waitPutTicket()
 {
-	MutexLocker locker(&m_mutexWait);
+	MutexLocker locker(&m_mutexCond);
 
 	while (queryTicket() <= 0)
 	{
-		pthread_cond_wait(&m_cond, &m_mutexWait);	//传入已经上锁的互斥量，等待条件变量被其他线程设置
+		pthread_cond_wait(&m_cond, &m_mutexCond);	//传入已经上锁的互斥量，等待条件变量被其他线程设置
 	}
 }
 

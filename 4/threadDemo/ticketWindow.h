@@ -24,15 +24,13 @@ public:
 		: m_ticketCount(0)
 	{
 		pthread_cond_init(&m_cond, NULL);
-		pthread_mutex_init(&m_mutexWait, NULL);
-		pthread_mutex_init(&m_mutexSignal, NULL);
+		pthread_mutex_init(&m_mutexCond, NULL);
 	}
 
 	virtual ~TicketDB()
 	{
 		pthread_cond_destroy(&m_cond);
-		pthread_mutex_destroy(&m_mutexWait);
-		pthread_mutex_destroy(&m_mutexSignal);
+		pthread_mutex_destroy(&m_mutexCond);
 	}
 
 	virtual void addTicket(int ticketNum);
@@ -46,8 +44,7 @@ protected:
 	int m_ticketCount;
 
 	pthread_cond_t m_cond;
-	pthread_mutex_t m_mutexWait;
-	pthread_mutex_t m_mutexSignal;
+	pthread_mutex_t m_mutexCond;
 };
 
 //售票窗口
