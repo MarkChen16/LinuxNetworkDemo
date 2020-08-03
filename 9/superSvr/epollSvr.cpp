@@ -79,6 +79,9 @@ void ClientQuery::doQuery(void* arg)
 	{
 		printf("%s(%d): %s\n", m_addr, m_port, buff);
 
+		//模拟处理请求时间
+		usleep(50 * 1000);
+
 		//注册新的事件
 		struct epoll_event event;
 		event.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;

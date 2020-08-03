@@ -4,9 +4,10 @@
 #include <list>
 #include <atomic>
 
-#define HOST_LISTEN_MAX 1000000
+#define HOST_LISTEN_MAX 1000
+
 #define EPOLL_SIZE_MAX	1000000
-#define EPOLL_WAIT_MAX	1000
+#define EPOLL_WAIT_MAX	10000
 
 #define BUFF_LEN 1024
 

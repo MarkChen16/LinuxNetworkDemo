@@ -94,6 +94,9 @@ netstat -i  查看网络错误数量
 sar -n SOCK 查看网络流量
 iostat -x  查看磁盘读写性能
 
+截取数据包：
+tcpdump -i eth0 src host 192.168.189.137 port 1800
+
 防火墙规则
 ufw enable
 ufw disable

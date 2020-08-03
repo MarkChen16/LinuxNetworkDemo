@@ -5,6 +5,8 @@
 #include "epollSvr.h"
 
 /*
+例子：采用与Nginx一样的epoll and kqueue模型
+
 
 高并发服务：epoll通过事件通知解决IO阻塞问题，多线程解决并发通信问题，线程池解决多线程频率创建销毁带来效率问题；
 
