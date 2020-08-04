@@ -17,6 +17,7 @@ ThreadPool* ThreadPool::getInstance()
 
 ThreadPool::ThreadPool(int activeThreadCount)
 	: m_shutdown(false)
+	, m_taskCount(0)
 {
 	pthread_mutex_init(&m_mutex, NULL);
 	pthread_cond_init(&m_cond, NULL);
@@ -71,6 +72,8 @@ void ThreadPool::addTask(const std::function<void(void*)>& fun, void* arg, bool 
 	else
 		m_queue.push_back(newTask);
 
+	m_taskCount = m_queue.size();
+
 	pthread_cond_signal(&m_cond);
 }
 
@@ -84,6 +87,8 @@ void ThreadPool::clearTask()
 		delete m_queue.back();
 		m_queue.pop_back();
 	}
+
+	m_taskCount = 0;
 }
 
 void ThreadPool::shutdown()
@@ -110,6 +115,11 @@ void ThreadPool::shutdown()
 	}
 }
 
+int ThreadPool::taskCount()
+{
+	return m_taskCount;
+}
+
 ThreadPool::__task_t* ThreadPool::pickTask()
 {
 	//选取任务，等待任务或者请求关闭
@@ -126,6 +136,8 @@ ThreadPool::__task_t* ThreadPool::pickTask()
 		frontTask = m_queue.front();
 		m_queue.pop_front();
 	}
+
+	m_taskCount = m_queue.size();
 
 	return frontTask;
 }

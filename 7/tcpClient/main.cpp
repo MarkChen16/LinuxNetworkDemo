@@ -19,14 +19,6 @@
 
 #define HOST_PORT 1800
 
-void sigchld_handler(int signo)
-{
-	//及时清理已经结束的子进程，为后续的fork调用预留系统资源
-	while (wait(NULL) != -1) {};
-
-	signal(SIGCHLD, sigchld_handler);
-}
-
 int main(int argc, char* argv[])
 {
 	int ret = 0;
@@ -34,7 +26,6 @@ int main(int argc, char* argv[])
 	const char* remoteIP = "192.168.189.134";
 
 	signal(SIGPIPE, SIG_IGN);
-	//signal(SIGCHLD, sigchld_handler);
 
 	if (argc >= 2)
 		remoteIP = argv[1];
@@ -95,26 +86,22 @@ int main(int argc, char* argv[])
 			{
 				printf("%07d new client: %d\n", i + 1, pid);
 
-				//及时清理一次已经结束的子进程，为后续的fork调用预留系统资源
-				//while (wait(NULL) != -1) {};
-
-				//每次只清理一个子进程,提高父进程执行效率
-				//wait(NULL);
+				_exit(EXIT_SUCCESS);
 			}
 			else
 			{
 				perror("fork");
 			}
-
-			_exit(EXIT_SUCCESS);
 		}
 		else if (ppid > 0)
 		{
-			
+			waitpid(ppid, NULL, 0);
 		}
 		else
 		{
-			perror("fork");
+			i--;
+
+			usleep(500 * 1000);
 		}
 	}
 

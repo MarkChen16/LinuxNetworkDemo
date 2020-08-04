@@ -36,6 +36,8 @@ public:
 	void clearTask();
 	void shutdown();
 
+	int taskCount();
+
 protected:
 	__task_t* pickTask();
 
@@ -50,6 +52,7 @@ private:
 	pthread_mutex_t m_mutex;
 	pthread_cond_t m_cond;
 	std::list<__task_t*> m_queue;
+	std::atomic_int m_taskCount;
 
 	static ThreadPool* gs_pool;
 };
