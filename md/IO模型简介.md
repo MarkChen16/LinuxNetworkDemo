@@ -33,32 +33,63 @@ socket默认是阻塞连接、读写操作；
 支持高并发，保持100W以上的连接，需要修改系统相关配置；
 
 ### 最大同时打开文件的数量
-	1. 修改用户程序最大同时打开文件的数量 
-	/etc/security/limits.conf
-	* soft nofile 10240
-	* hard nofile 10240
-	
-	2. 修改系统级最大同时打开文件的数量
+* 修改最大同时打开文件的数量 /etc/security/limits.conf
+	```
+	* soft nofile 1048756
+	* hard nofile 1048756
+	```
+
+* 修改系统级最大同时打开文件的数量
+	```
 	cat /proc/sys/fs/file-max
-	12158		--> 系统在启动时根据系统硬件资源状况计算出来
+	12158
 	
 	/etc/rc.local
-	echo 655350 > /proc/sys/fs/file-max
+	echo 1048756 > /proc/sys/fs/file-max
+	```
 
+* 应用新的配置
+	```
+	sysctl -p /etc/sysctl.conf
+	```
 
-### 客户端模拟并发，出现Cannot assign requested address错误
+### 服务端修改配置
+并发数量跟内存有很大关系；
+
+	#设置最大的监听队列的长度, 默认值为128
+	net.core.somaxconn = 10000
+
+	#系统读写缓存，默认值
+	net.core.rmem_default = 262144
+	net.core.wmem_default = 262144
+
+	#系统读写缓存
+	net.core.rmem_max = 16777216
+	net.core.wmem_max = 16777216
+	net.ipv4.tcp_rmem = 4096 4096 16777216
+	net.ipv4.tcp_wmem = 4096 4096 16777216
+	net.ipv4.tcp_mem = 786432 3145728  4194304
+	net.ipv4.tcp_max_syn_backlog = 16384
+	net.core.netdev_max_backlog = 20000
+	net.ipv4.tcp_fin_timeout = 15
+	net.ipv4.tcp_max_syn_backlog = 16384
+	net.ipv4.tcp_tw_reuse = 1
+	net.ipv4.tcp_tw_recycle = 1
+	
+
+### 客户端模拟并发
 client端频繁建立连接，而端口释放较慢，导致建立新连接时无可用端口。
 
-	1. 调低端口释放后的等待时间，默认为60s，修改为15~30s：
-	sysctl -w net.ipv4.tcp_fin_timeout=30
-
-	2. 修改tcp/ip协议配置， 通过配置/proc/sys/net/ipv4/tcp_tw_resue, 默认为0，修改为1，释放TIME_WAIT端口给新连接使用：
-	sysctl -w net.ipv4.tcp_timestamps=1
-
-	3. 允许端口重用：
-	sysctl -w net.ipv4.tcp_tw_reuse=1
+	#修改临时端口范围、端口释放时间、端口复用
+	net.ipv4.tcp_fin_timeout=30
+	net.ipv4.tcp_timestamps=1
+	net.ipv4.tcp_tw_reuse=1
+	net.ipv4.ip_local_port_range = 1024 65535
 
 
+	#iptable防火墙对最大跟踪的TCP连接数有限制
+	net.netfilter.nf_conntrack_max = 1048756
+	net.nf_conntrack_max = 1048756
 
 
 
