@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <wait.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -14,7 +15,7 @@
 #include <semaphore.h>
 
 /*
-信号量：常用于进程间同步访问资源
+信号量：通常用于进程间同步访问资源
 
 相关函数：ftok  semget  semctl  semop semtimedop
 
@@ -44,7 +45,7 @@ int getSem(int semID)
 	return semctl(semID, 0, GETVAL);
 }
 
-void semAdd(int semID)
+bool semAdd(int semID)
 {
 	struct sembuf buf;
 	buf.sem_num = 0;
@@ -57,23 +58,33 @@ void semAdd(int semID)
 	//可以使用semtimedop，可以设置超时
 
 	int result = semop(semID, &buf, 1);
+	if (result == -1)
+	{
+		return false;
+	}
+
+	return true;
 }
 
-void semSub(int semID)
+bool semSub(int semID)
 {
 	struct sembuf buf;
 	buf.sem_num = 0;
 	buf.sem_op = -1;
 	buf.sem_flg = 0;
 
+	//超时设置为5秒
 	struct timespec timeOut;
-	timeOut.tv_sec = 3;
+	timeOut.tv_sec = 5;
 	timeOut.tv_nsec = 0;
 	int result = semtimedop(semID, &buf, 1, &timeOut);
 	if (result == -1)
 	{
 		printf("Timeout, Failed to semSub.\n");
+		return false;
 	}
+
+	return true;
 }
 
 void semDel(int semID)
@@ -84,6 +95,7 @@ void semDel(int semID)
 	int result = semctl(semID, 0, IPC_RMID, sem);
 }
 
+//父子进程使用信号量同步例子
 int main(int argc, char* argv[])
 {
 	int ret = 0;
@@ -100,7 +112,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		//创建包含10个信号的信号集合
+		//创建总量为10个信号的信号集合
 		int semID = semget(keyID, 10, IPC_CREAT | 0666);
 		if (semID == -1)
 		{
@@ -109,23 +121,43 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			//将编号为0的信号初始化为2
-			setSem(semID, 2);
-			printf("after init, sem: %d\n", getSem(semID));
+			//信号量初始化为0
+			setSem(semID, 0);
 
-			//获取资源
-			semSub(semID);
-			semSub(semID);
-			semSub(semID);  //没有资源了，会等待直到超时
-			printf("after sub, sem: %d\n", getSem(semID));
+			pid_t pid = fork();
+			if (pid > 0)
+			{
+				//父进程：3秒钟之后设置信号量
+				sleep(3);
+				semAdd(semID);
 
-			//释放资源
-			semAdd(semID);
-			semAdd(semID);
-			printf("after add, sem: %d\n", getSem(semID));
+				//等待子进程退出
+				int status = 0;
+				waitpid(pid, &status, 0);
 
-			//删除编号为0的信号
-			semDel(semID);
+				//删除编号为0的信号
+				semDel(semID);
+			}
+			else if (pid == 0)
+			{
+				//子进程
+				printf("Child[%d] start...\n", getpid());
+
+				//如果没有资源了，会等待直到超时
+				if (semSub(semID))
+				{
+					//处理资源
+					printf("Child[%d] handle...\n", getpid());
+				}
+
+				printf("Child[%d] end...\n", getpid());
+
+				_exit(0);
+			}
+			else
+			{
+				printf("Child[%d] start...\n", getpid());
+			}
 		}
 	}
 

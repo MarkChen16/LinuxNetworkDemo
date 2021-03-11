@@ -9,7 +9,7 @@
 #include <sys/sem.h>
 
 /*
-共享内存：进程间共享内存空间，地址指向同一块内存片段，是所有IPC中速度最快的，常常与信号量配合使用；
+共享内存：进程间共享内存空间，地址指向同一块内存片段，是所有IPC中速度最快的，常常与信号量配合使用，使用信号量同步，一个进程写，一个进程读；
 shmat和shmdt采用计数方式引用，当计数为0时，系统就会释放共享内存；
 
 相关函数：shmget shmat shmdt shmctl
@@ -66,10 +66,11 @@ int main(int argc, char* argv[])
 			semVal.val = 1;
 			semctl(semID, 0, SETVAL, semVal);
 
-			//等待信号量为0，超时为3秒
+			//等待信号量为0，没有超时一直等待
 			struct sembuf semData = { 0, 0, 0 };
 			semop(semID, &semData, 1);
 
+			//等待信号量为0，超时为3秒
 			//timespec ts;
 			//ts.tv_sec = 3;
 			//semtimedop(semID, &semData, 1, &ts);

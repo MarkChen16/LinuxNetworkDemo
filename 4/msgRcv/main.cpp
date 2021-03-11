@@ -38,7 +38,7 @@ echo 272000000 > /proc/sys/kernel/msgmnb;
 //消息类型定义
 enum MsgType
 {
-	None,
+	None = 1,
 	Hello,
 	Query,
 	GoodByte,
@@ -58,7 +58,7 @@ struct msg_query_t
 	int queryID;
 };
 
-struct msg_goodbye_t 
+struct msg_goodbye_t
 {
 	char sender[10];
 };
@@ -81,7 +81,7 @@ struct msgbuff_t
 		assert(sizeof(msg_t) < 8192);
 	}
 
-	//消息固定变量
+	//消息类型，固定字段，必须大于0
 	long mtype;
 
 	//自定义部分(最大长度为8192)

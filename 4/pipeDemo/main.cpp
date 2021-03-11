@@ -12,7 +12,7 @@
 
 /*
 pipe匿名管道：
-1、半双工，数据在同一时刻只能在一个方向上流动。
+1、半双工，数据在同一时刻只能在一个方向上流动，需要两个匿名管道才能完成全双工通信。
 2、数据只能从管道的一端写入，从另一端读出。
 3、写入管道中的数据遵循先入先出的规则。
 4、管道所传送的数据是无格式的，这要求管道的读出方与写入方必须事先约定好数据的格式，如多少字节算一个消息等。
@@ -38,9 +38,19 @@ int main(int argc, char* argv[])
 {
 	int ret = 0;
 
-	int fdRW[2] = {0, 0};
+	//创建两个匿名管道实现全双工通信
+	int result = 0;
+	int toFatherFD[2] = {0, 0};
+	int toChildFD[2] = {0, 0};
 
-	int result = pipe(fdRW);
+	result = pipe(toFatherFD);
+	if (result == -1)
+	{
+		printf("Failed to pipe.\n");
+		return ret;
+	}
+
+	result = pipe(toChildFD);
 	if (result == -1)
 	{
 		printf("Failed to pipe.\n");
@@ -50,42 +60,72 @@ int main(int argc, char* argv[])
 	pid_t pid = fork();
 	if (pid == 0)
 	{
-		close(fdRW[0]);		//子进程关闭读端
+		close(toFatherFD[0]);  //关闭流向父进程的读FD
+		close(toChildFD[1]);   //关闭流向子进程的写FD
 
 		//写入数据
 		pipe_data_t writeData;
 		writeData.pid = getpid();
 		strcpy(writeData.msg, "say hello...");
 
-		int lenWrite = write(fdRW[1], &writeData, sizeof(pipe_data_t));
+		int lenWrite = write(toFatherFD[1], &writeData, sizeof(pipe_data_t));
 		if (lenWrite == -1)
 		{
 			printf("Failed to write.\n");
 		}
 
-		close(fdRW[1]);
+		//读取数据
+		pipe_data_t readData;
+		int lenRead = read(toChildFD[0], &readData, sizeof(pipe_data_t));
+		if (lenRead == -1)
+		{
+			printf("Failed to read.\n");
+		}
+		else
+		{
+			printf("Father[%i]: %s\n", readData.pid, readData.msg);
+		}
+		
+		close(toFatherFD[1]);
+		close(toChildFD[0]);
 
 		_exit(0);
+	}
+	else if (pid > 0)
+	{
+		close(toFatherFD[1]);  //关闭流向父进程的写FD
+		close(toChildFD[0]);   //关闭流向子进程的读FD
+
+		pipe_data_t readData;
+		pipe_data_t writeData;
+		writeData.pid = getpid();
+		strcpy(writeData.msg, "hello!!!");
+
+		//读取数据
+		int lenRead = read(toFatherFD[0], &readData, sizeof(pipe_data_t));
+		if (lenRead == -1)
+		{
+			printf("Failed to read.\n");
+		}
+		else
+		{
+			printf("Child[%i]: %s\n", readData.pid, readData.msg);
+		}
+
+		//写入数据
+		int lenWrite = write(toChildFD[1], &writeData, sizeof(pipe_data_t));
+		if (lenWrite == -1)
+		{
+			printf("Failed to write.\n");
+		}
+
+		close(toFatherFD[0]);
+		close(toChildFD[1]);
 	}
 	else if (pid < 0)
 	{
 		printf("Failed to fork.\n");
 	}
-
-	close(fdRW[1]);		//父进程关闭写端
-
-	pipe_data_t readData;
-	int lenRead = read(fdRW[0], &readData, sizeof(pipe_data_t));
-	if (lenRead == -1)
-	{
-		printf("Failed to read.\n");
-	}
-	else
-	{
-		printf("Child[%i]: %s\n", readData.pid, readData.msg);
-	}
-
-	close(fdRW[0]);
 
 	return ret;
 }

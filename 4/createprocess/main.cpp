@@ -6,10 +6,16 @@
 #include <sys/wait.h>
 
 /*
-fork()：创建子进程，写时复制父进程数据
-vfork()：创建子进程，共享父进程数据
-system()：新建子进程，调用shell外部命令，通过调用fork()、execve()和waitpid()实现
-exec()：新建进程代替原进程，使用原进程的资源，进程ID也一样。
+fork()：创建子进程，共享读父进程数据，写时复制父进程数据(拷贝一份再写)
+vfork()：子进程先运行，父进程挂起，直到子进程调用exec或exit，在这过程中两个进程共享同一份内存
+system()：新建子进程，通常用于调用shell外部命令，内部通过调用fork()、execve()和waitpid()实现
+exec()：装载一个新的程序（可执行映像）覆盖当前进程内存空间中的映像，从而执行不同的任务。
+
+写时复制：
+fork()之后，kernel把父进程中所有的内存页的权限都设为read-only，然后子进程的地址空间指向父进程。
+当父子进程都只读内存时，相安无事。
+当其中某个进程写内存时，CPU硬件检测到内存页是read-only的，于是触发页异常中断（page-fault），陷入kernel的一个中断例程。
+中断例程中，kernel就会把触发的异常的页复制一份，于是父子进程各自持有独立的一份。
 
 僵尸进程产生的原因：
 父进程fork了大量的子进程，一直在运行但没有执行wait/waitpid处理结束的子进程，导致pid标识耗尽，下一次fork失败；
@@ -87,7 +93,7 @@ void do_fork()
 	//打印父进程的ID
 	printf("current pid = %d\n", getpid());
 
-	for (int start = 0; start < 10000; start++)
+	for (int start = 0; start < 2; start++)
 	{
 		pid_t pid = fork();
 		if (pid > 0)
@@ -102,11 +108,11 @@ void do_fork()
 
 			printf("pid(%d) ppid(%d):", getpid(), getppid());
 
-			for (i = start; i < 1000; i++)
-			{
-				printf("%d ", i);
-			}
-			printf("\n");
+			//for (i = start; i < 1000; i++)
+			//{
+			//	printf("%d ", i);
+			//}
+			//printf("\n");
 
 			//写时复制：修改父进程变量时，复制父进程的内存页，修改后不会影响父进程的变量
 			//但子进程和父进程的虚拟地址是一样，但通过内核映射到物理内存地址是不一样的；
@@ -133,20 +139,18 @@ void do_vfork()
 	pid_t pid = vfork();
 	if (pid > 0)
 	{
-		printf("parent: data = %i\n", data);
-
-		//等待子进程结束
-		int status = 0;
-		waitpid(pid, &status, 0);
-
-		//vfork子进程共享父进程数据，子进程修改数据后，父进程显示修改后的数据
-		printf("child after: data = %i\n", data);
+		//子进程exit，开始执行父进程
+		printf("child after exit: data = %i\n", data);
 	}
 	else if (pid == 0)
 	{
+		//子进程先执行
 		printf("child: data = %i\n", data);
+
+		//修改数据
 		data = 2;
 
+		//退出
 		_exit(0);
 	}
 	else
@@ -175,6 +179,6 @@ void do_exec()
 	else
 	{
 		//成功后不会返回，因为新进程已经代替原进程了，这里不会执行
-		//printf("Success to execve.\n");
+		printf("Success to execve.\n");
 	}
 }

@@ -7,7 +7,7 @@
 #include <bits/sigthread.h>
 
 /*
-信号：捕捉系统核心发给进程的信号，比如SIGALRM、SIGKILL、 SIGTERM等等，使用signal()函数更改信号处理函数；
+信号：捕捉系统核心发给进程的信号，比如SIGALRM、SIGKILL、SIGTERM等等，使用signal()函数更改信号处理函数；
 
 修改程序的信号处理函数
 signal()：异步中断，会被重置

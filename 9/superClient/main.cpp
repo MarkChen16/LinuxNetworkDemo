@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	std::map<int, QueryInfo*> queryMap;
 
 	int clientCount = 60000;
-	const char* remoteIP = "192.168.189.134";
+	const char* remoteIP = "192.168.189.166";
 	
 	if (argc >= 2)
 		remoteIP = argv[1];

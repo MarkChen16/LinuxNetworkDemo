@@ -24,7 +24,7 @@
 //消息类型定义
 enum MsgType
 {
-	None,
+	None = 1,
 	Hello,
 	Query,
 	GoodByte,
@@ -67,7 +67,7 @@ struct msgbuff_t
 		assert(sizeof(msg_t) < 8192);
 	}
 
-	//消息固定变量
+	//消息类型，固定字段，必须大于0
 	long mtype;
 
 	//自定义部分(最大长度为8192)
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			for (int i = 1; i <= 100000; i++)
+			for (int i = 1; i <= 100; i++)
 			{
 				pid_t pid = fork();
 				if (pid == 0)

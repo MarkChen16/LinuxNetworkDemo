@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	int ret = 0;
 
 	EpollSvr superSvr;
-	superSvr.start("192.168.189.134", 1800);
+	superSvr.start("192.168.189.166", 1800);
 
 	pause();
 	return ret;

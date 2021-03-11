@@ -27,7 +27,7 @@ pthread_t  pthread_mutex_t
 条件变量pthread_cond_t： pthread_cond_init  pthread_cond_wait  pthread_cond_signal  pthread_cond_broadcast  pthread_cond_destroy
 
 注意： 
-自旋锁：属于busy-waitting模式，占有CPU使用率比较高，效率也比较高；其他锁是sleep-waitting模式；
+自旋锁：属于busy-waitting忙等待模式，不会让出CPU时间，占有CPU使用率比较高，效率也比较高，适用于高频场景；其他锁是sleep-waitting模式；
 条件变量：等待A线程完成某件事件之后，线程B才开始继续运行，条件变量需要跟互斥量配合使用；
 
 */
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 	for (int i = 3; i >= 1; i--)
 	{
 		sleep(1);
-		printf("开始放票(%i)...\n", i);
+		printf("抢票倒计时(%i)...\n", i);
 	}
 
 	sleep(1);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	printf("系统停止售票！\n");
+	printf("时间已到，系统停止售票！\n");
 
 	return ret;
 }
